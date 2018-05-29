@@ -156,6 +156,14 @@
                 <p><font size="3">50t 與 25t 的齒輪嚙合靜態輪廓圖</font></p>
 
 
+<script type="text/javascript" src="https://brython.info/src/brython_dist.js"></script>
+
+<script type="text/javascript" src="https://2015fallhw.github.io/cptocadp/static/Cango-8v03.js"></script>
+
+<script type="text/javascript" src="https://2015fallhw.github.io/cptocadp/static/Cango2D-7v01-min.js"></script>
+
+<script type="text/javascript" src="https://2015fallhw.github.io/cptocadp/static/gearUtils-05.js"></script>
+
 <!-- 導入 Brython 標準程式庫 -->
 
 <script src="../data/Brython-3.5.1/brython.js"></script>
@@ -171,57 +179,41 @@ brython({debug:1, pythonpath:['./../data/py']});
 }
 </script>
 
-<!-- 以下處理 Cango Spur Gear -->
-
-<!-- Cango 程式庫 -->
-
-<script type="text/javascript" src="./../data/w11/cango
-/Cango-9v05-min.js"></script>
-
-<script type="text/javascript" src="./../data/w11/cango
-/CangoAxes-2v09.js"></script>
-
-<script type="text/javascript" src="./../data/w11/cango
-/CangoAnimation-5v00.js"></script>
-
-<script type="text/javascript" src="./../data/w11/cango
-/gearUtils-05.js"></script>
-
-<canvas id='cango_gear' width='1200' height='800'></canvas>
+<canvas id='gear1' width='800' height='700'></canvas>
 
 <script type="text/python">
 # 將 導入的 document 設為 doc 主要原因在於與舊程式碼相容
 from browser import document as doc
 # 由於 Python3 與 Javascript 程式碼已經不再混用, 因此來自 Javascript 的變數, 必須居中透過 window 物件轉換
 from browser import window
+# 針對 Javascript 既有的物件, 則必須透過 JSConstructor 轉換
+from javascript import JSConstructor
 import math
 
 # 主要用來取得畫布大小
-canvas = doc["cango_gear"]
+canvas = doc["gear1"]
 # 此程式採用 Cango Javascript 程式庫繪圖, 因此無需 ctx
-ctx = canvas.getContext("2d")
-cango = window.Cango.new
+#ctx = canvas.getContext("2d")
+# 針對類別的轉換, 將 Cango.js 中的 Cango 物件轉為 Python cango 物件
+cango = JSConstructor(window.Cango)
 # 針對變數的轉換, shapeDefs 在 Cango 中資料型別為變數, 可以透過 window 轉換
 shapedefs = window.shapeDefs
 # 目前 Cango 結合 Animation 在 Brython 尚無法運作, 此刻只能繪製靜態圖形
 # in CangoAnimation.js
 #interpolate1 = window.interpolate
 # Cobi 與 createGearTooth 都是 Cango Javascript 程式庫中的物件
-#cobj = window.Cobj.new
-shape = window.Shape.new
-path = window.Path.new
-creategeartooth = window.createGearTooth.new
+cobj = JSConstructor(window.Cobj)
+creategeartooth = JSConstructor(window.createGearTooth)
 
-tweener = window.Tweener.new
-# 經由 Cango 轉換成 Brython 的 cango, 指定將圖畫在 id="cango_gear" 的 canvas 上
-cgo = cango("cango_gear")
+# 經由 Cango 轉換成 Brython 的 cango, 指定將圖畫在 id="plotarea" 的 canvas 上
+cgo = cango("gear1")
 
 ######################################
 # 畫正齒輪輪廓
 #####################################
-def cangoGear(n, m, pa):
+def spur(cx, cy, m, n, pa, theta):
     # n 為齒數
-    #n = 17
+    #n = 40
     # pa 為壓力角
     #pa = 25
     # m 為模數, 根據畫布的寬度, 計算適合的模數大小
@@ -233,11 +225,14 @@ def cangoGear(n, m, pa):
     data = creategeartooth(m, n, pa)
     # Brython 程式中的 print 會將資料印在 Browser 的 console 區
     #print(data)
-    gearTooth = shape(data, {
-      "fillColor":"#ddd0dd",
-      "border": True,
-      "strokeColor": "#606060" })
-    gearTooth.rotate(180/n) # rotate gear 1/2 tooth to mesh
+
+    gearTooth = cobj(data, "SHAPE", {
+            "fillColor":"#ddd0dd",
+            "border": True,
+            "strokeColor": "#606060" })
+    #gearTooth.rotate(180/n) # rotate gear 1/2 tooth to mesh, 請注意 rotate 角度為 degree
+    # theta 為角度
+    gearTooth.rotate(theta) 
     # 單齒的齒形資料經過旋轉後, 將資料複製到 gear 物件中
     gear = gearTooth.dup()
     # gear 為單一齒的輪廓資料
@@ -255,73 +250,53 @@ def cangoGear(n, m, pa):
     # 建立軸孔
     # add axle hole, hr 為 hole radius
     hr = 0.6*pr # diameter of gear shaft
-    shaft = path(shapedefs.circle(hr))
+    shaft = cobj(shapedefs.circle(hr), "PATH")
     shaft.revWinding()
     gear.appendPath(shaft) # retain the 'moveTo' command for shaft sub path
+    gear.translate(cx, cy)
+    # render 繪出靜態正齒輪輪廓
+    cgo.render(gear)
+    # 接著繪製齒輪的基準線
+    deg = math.pi/180
+    Line = cobj(['M', cx, cy, 'L', cx+pr*math.cos(theta*deg), cy+pr*math.sin(theta*deg)], "PATH", {
+          'strokeColor':'blue', 'lineWidth': 1})
+    cgo.render(Line)
 
-    # setup the animation
-    # backlash (mm)
-    bklsh = 0.04*m
-    # centre shift to make backlash
-    dC = bklsh/(2*math.tan(math.pi*pa/180))
-    # np 為小齒輪齒數
-    np = 20
-    # gear ratio
-    gr = n/np              
-    gearConfig = {'cx':-pr, 'cy':0, 'degs':[0, 360]}
-    # gr*0.666 rpm
-    #pinionConfig = {'cx':pr+dC, 'cy':0, 'degs':[0, -gr*360]}
-    # 0.666 rpm
-    # 目前並非以 tweener 執行動畫
-    #twnr = tweener(0, 90000, "loop")
-    return gear
+# 2個齒輪的齒數
+n1 = 40
+n2 = 20
 
-# 設定兩齒齒數
-n = 10
-n2 = 10
-reduced_ratio = 0.5
-# 使用 80% 的畫布寬度
-m = 0.5*canvas.width/((n+n2)*reduced_ratio)
-# 設定共同的壓力角
-pa = 25
-# n 齒輪的節圓半徑
-pr = n*m/2
-# n2 齒輪的節圓半徑
+
+# m 為模數, 根據畫布的寬度, 計算適合的模數大小
+# Module = mm of pitch diameter per tooth
+# 利用 80% 的畫布寬度進行繪圖
+# 計算模數的對應尺寸
+m = canvas.width*0.8/(n1+n2)
+
+# 根據齒數與模組計算各齒輪的節圓半徑
+pr1 = n1*m/2
 pr2 = n2*m/2
-# 建立 gear
-gear = cangoGear(n, m, pa)
-cx = canvas.width/2
+
+
+# 畫布左右兩側都保留畫布寬度的 10%
+# 依此計算對應的最左邊齒輪的軸心座標
+cx = canvas.width*0.1+pr1
 cy = canvas.height/2
-#gear.translate(cx, cy)
-# render 繪出靜態正齒輪輪廓
-#cgo.render(gear)
-# 利用 gear 資料複製一份, 命名為 gear1
-#gear1 = gear.dup()
-# 建立 gear1
-gear1 = cangoGear(n2, m, pa)
 
+# pa 為壓力角
+pa = 25
 
-from time import time
-from browser.timer import request_animation_frame as raf
-from browser.timer import set_interval
-
-deg = math.pi/180
-
-def draw():
-    cgo.clearCanvas()
-    gear.rotate(2*deg)
-    # 在特定位置, 以特定 scale, 特定 degs 執行 render
-    # 設定囓合點在畫布正中央
-    # 囓合點往左偏 pr/2 即為 n 齒輪的圓心 x 座標
-    #cgo.render(gear, {'x':cx-pr*reduced_ratio, 'y':cy, 'scl':reduced_ratio, 'degs':0})
-    cgo.render(gear, {'x':cx-(pr+pr2)*reduced_ratio, 'y':cy, 'scl':0.5, 'degs':0})
-    # 根據兩齒輪齒數比決定 n2 齒輪轉速
-    gear1.rotate(-2*deg*n/n2)
-    # 囓合點往右偏 pr2/2 即為 n2 齒輪的圓心 x 座標, 且 n2 齒轉 180 加一齒角度後囓合
-    cgo.render(gear1, {'x':cx, 'y':cy, 'scl':reduced_ratio, 'degs':180+(360/n2/2)})
-
-set_interval(draw, 2)
-</script
+# 畫最左邊齒輪, 定位線旋轉角為 0, 軸心座標 (cx, cy)
+spur(cx, cy, m, n1, pa, 0)
+# 第2個齒輪將原始的定位線逆時鐘轉 180 度後, 與第1個齒輪正好齒頂與齒頂對齊
+# 只要第2個齒輪再逆時鐘或順時鐘轉動半齒的角度, 即可完成囓合
+# 每一個齒分別包括從齒根到齒頂的範圍, 涵蓋角度為 360/n, 因此所謂的半齒角度為 180/n
+spur(cx+pr1+pr2, cy, m, n2, pa, 180-180/n2)
+# 第2齒與第3齒的囓合, 首先假定第2齒的定位線在 theta 角為 0 的原始位置
+# 如此, 第3齒只要逆時鐘旋轉 180 度後, 再逆時鐘或順時鐘轉動半齒的角度, 即可與第2齒囓合
+# 但是第2齒為了與第一齒囓合時, 已經從原始定位線轉了 180-180/n2 度
+# 而當第2齒從與第3齒囓合的定位線, 逆時鐘旋轉 180-180/n2 角度後, 原先囓合的第3齒必須要再配合旋轉 (180-180/n2 )*n2/n3
+</script>
             </div>
             <!-- /.entry-content -->
         </article>
