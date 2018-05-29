@@ -72,6 +72,9 @@
 <v t="leo.20170427185256.1"><vh>@edit 20170421.md</vh></v>
 <v t="leo.20170427185305.1"><vh>@edit 20170426.md</vh></v>
 <v t="leo.20170427185307.1"><vh>@edit 20170427.md</vh></v>
+<v t="leo.20180529104707.1"><vh>@edit 20180527.md</vh></v>
+<v t="leo.20180529105336.1"><vh>@edit 20180528.md</vh></v>
+<v t="leo.20180529105351.1"><vh>@edit 20180529.md</vh></v>
 <v t="yen.20170108171733.81" a="E"><vh>@path pages</vh>
 <v t="yen.20170108171733.82"><vh>@edit pages_1.md</vh></v>
 </v>
@@ -84,6 +87,12 @@
 <v t="leo.20170623133430.3"><vh>Recovered node "cmsimply" from @clean index.html</vh>
 <v t="leo.20170623133430.4"><vh>old:cmsimply</vh></v>
 <v t="leo.20170623133430.5"><vh>new:cmsimply</vh></v>
+</v>
+</v>
+<v t="leo.20180529104646.1" a="E"><vh>Recovered Nodes</vh>
+<v t="leo.20180529104646.2"><vh>Recovered node "封面投影片內容" from @clean index.html</vh>
+<v t="leo.20180529104646.3"><vh>old:封面投影片內容</vh></v>
+<v t="leo.20180529104646.4"><vh>new:封面投影片內容</vh></v>
 </v>
 </v>
 </vnodes>
@@ -231,6 +240,55 @@ Diff...
 * Brython 是一種以 Javascript 作為底層技術的客戶端 Python3 程式環境.
 * 使用者可以直接採用 Python3 程式語法結合 Html 5 建構多媒體網站.
 
+</t>
+<t tx="leo.20180529104646.1"></t>
+<t tx="leo.20180529104646.2">(uncached) yen.20170108171733.15
+Diff...
+- ## 楊永慶 網際內容管理課程
++ ## 2017Spring 網際內容管理課程
+  
+  ### 虎科大機械設計工程系
+  
+  &lt;small&gt;
+  Created by [springwcm_hw](https://mde2a2.kmol.info/wcmhw/index)
+  &lt;/small&gt;
+  
+  [40523108](blog/index.html)
+  [40523117](blog/index.html)&lt;br&gt;
+  [40523121](blog/index.html)
+  [40523137](blog/index.html)&lt;br&gt;
+  [40523140](blog/index.html)
+  [40523142](blog/index.html)
+</t>
+<t tx="leo.20180529104646.3">## 2017Spring 網際內容管理課程
+
+### 虎科大機械設計工程系
+
+&lt;small&gt;
+Created by [springwcm_hw](https://mde2a2.kmol.info/wcmhw/index)
+&lt;/small&gt;
+
+[40523108](blog/index.html)
+[40523117](blog/index.html)&lt;br&gt;
+[40523121](blog/index.html)
+[40523137](blog/index.html)&lt;br&gt;
+[40523140](blog/index.html)
+[40523142](blog/index.html)
+</t>
+<t tx="leo.20180529104646.4">## 楊永慶 網際內容管理課程
+
+### 虎科大機械設計工程系
+
+&lt;small&gt;
+Created by [springwcm_hw](https://mde2a2.kmol.info/wcmhw/index)
+&lt;/small&gt;
+
+[40523108](blog/index.html)
+[40523117](blog/index.html)&lt;br&gt;
+[40523121](blog/index.html)
+[40523137](blog/index.html)&lt;br&gt;
+[40523140](blog/index.html)
+[40523142](blog/index.html)
 </t>
 <t tx="yen.20170108171605.1"></t>
 <t tx="yen.20170108171605.2">QTreeWidget {
@@ -398,7 +456,7 @@ vertical: body pane on the botton</t>
 
 						
 </t>
-<t tx="yen.20170108171733.15">## 2017Spring 網際內容管理課程
+<t tx="yen.20170108171733.15">## 楊永慶 網際內容管理課程
 
 ### 虎科大機械設計工程系
 
