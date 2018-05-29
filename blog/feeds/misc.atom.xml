@@ -1,5 +1,624 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>2017Spring 網際內容管理 (Springwcm_hw)</title><link href="./" rel="alternate"></link><link href="./feeds/misc.atom.xml" rel="self"></link><id>./</id><updated>2017-04-27T18:00:00+08:00</updated><entry><title>網路線製作</title><link href="./wang-lu-xian-zhi-zuo.html" rel="alternate"></link><published>2017-04-27T18:00:00+08:00</published><updated>2017-04-27T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:,2017-04-27:./wang-lu-xian-zhi-zuo.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;自行製作網路線&lt;/font&gt;&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>2017Spring 網際內容管理 (Springwcm_hw) - Misc</title><link href="./" rel="alternate"></link><link href="./feeds/misc.atom.xml" rel="self"></link><id>./</id><updated>2018-05-29T18:00:00+08:00</updated><entry><title>50t 與 25t 的齒輪嚙合靜態輪廓圖</title><link href="./50t-yu-25t-de-chi-lun-nie-he-jing-tai-lun-kuo-tu.html" rel="alternate"></link><published>2018-05-29T18:00:00+08:00</published><updated>2018-05-29T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2018-05-29:./50t-yu-25t-de-chi-lun-nie-he-jing-tai-lun-kuo-tu.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;50t 與 25t 的齒輪嚙合靜態輪廓圖&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;50t 與 25t 的齒輪嚙合靜態輪廓圖&lt;/font&gt;&lt;/p&gt;
+
+
+&lt;!-- 導入 Brython 標準程式庫 --&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython.js"&gt;&lt;/script&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython_stdlib.js"&gt;&lt;/script&gt;
+
+&lt;!-- 啟動 Brython --&gt;
+
+&lt;script&gt;
+window.onload=function(){
+// 設定 data/py 為共用程式路徑
+brython({debug:1, pythonpath:['./../data/py']});
+}
+&lt;/script&gt;
+
+&lt;!-- 以下處理 Cango Spur Gear --&gt;
+
+&lt;!-- Cango 程式庫 --&gt;
+
+&lt;script type="text/javascript" src="./../data/w11/cango
+/Cango-9v05-min.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/javascript" src="./../data/w11/cango
+/CangoAxes-2v09.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/javascript" src="./../data/w11/cango
+/CangoAnimation-5v00.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/javascript" src="./../data/w11/cango
+/gearUtils-05.js"&gt;&lt;/script&gt;
+
+&lt;canvas id='cango_gear' width='1200' height='800'&gt;&lt;/canvas&gt;
+
+&lt;script type="text/python"&gt;
+# 將 導入的 document 設為 doc 主要原因在於與舊程式碼相容
+from browser import document as doc
+# 由於 Python3 與 Javascript 程式碼已經不再混用, 因此來自 Javascript 的變數, 必須居中透過 window 物件轉換
+from browser import window
+import math
+
+# 主要用來取得畫布大小
+canvas = doc["cango_gear"]
+# 此程式採用 Cango Javascript 程式庫繪圖, 因此無需 ctx
+ctx = canvas.getContext("2d")
+cango = window.Cango.new
+# 針對變數的轉換, shapeDefs 在 Cango 中資料型別為變數, 可以透過 window 轉換
+shapedefs = window.shapeDefs
+# 目前 Cango 結合 Animation 在 Brython 尚無法運作, 此刻只能繪製靜態圖形
+# in CangoAnimation.js
+#interpolate1 = window.interpolate
+# Cobi 與 createGearTooth 都是 Cango Javascript 程式庫中的物件
+#cobj = window.Cobj.new
+shape = window.Shape.new
+path = window.Path.new
+creategeartooth = window.createGearTooth.new
+
+tweener = window.Tweener.new
+# 經由 Cango 轉換成 Brython 的 cango, 指定將圖畫在 id="cango_gear" 的 canvas 上
+cgo = cango("cango_gear")
+
+######################################
+# 畫正齒輪輪廓
+#####################################
+def cangoGear(n, m, pa):
+    # n 為齒數
+    #n = 17
+    # pa 為壓力角
+    #pa = 25
+    # m 為模數, 根據畫布的寬度, 計算適合的模數大小
+    # Module = mm of pitch diameter per tooth
+    #m = 0.8*canvas.width/n
+    # pr 為節圓半徑
+    pr = n*m/2 # gear Pitch radius
+    # generate gear
+    data = creategeartooth(m, n, pa)
+    # Brython 程式中的 print 會將資料印在 Browser 的 console 區
+    #print(data)
+    gearTooth = shape(data, {
+      "fillColor":"#ddd0dd",
+      "border": True,
+      "strokeColor": "#606060" })
+    gearTooth.rotate(180/n) # rotate gear 1/2 tooth to mesh
+    # 單齒的齒形資料經過旋轉後, 將資料複製到 gear 物件中
+    gear = gearTooth.dup()
+    # gear 為單一齒的輪廓資料
+    #cgo.render(gearTooth)
+
+    # 利用單齒輪廓旋轉, 產生整個正齒輪外形
+    for i in range(1, n):
+        # 將 gearTooth 中的資料複製到 newTooth
+        newTooth = gearTooth.dup()
+        # 配合迴圈, newTooth 的齒形資料進行旋轉, 然後利用 appendPath 方法, 將資料併入 gear
+        newTooth.rotate(360*i/n)
+        # appendPath 為 Cango 程式庫中的方法, 第二個變數為 True, 表示要刪除最前頭的 Move to SVG Path 標註符號
+        gear.appendPath(newTooth, True) # trim move command = True
+
+    # 建立軸孔
+    # add axle hole, hr 為 hole radius
+    hr = 0.6*pr # diameter of gear shaft
+    shaft = path(shapedefs.circle(hr))
+    shaft.revWinding()
+    gear.appendPath(shaft) # retain the 'moveTo' command for shaft sub path
+
+    # setup the animation
+    # backlash (mm)
+    bklsh = 0.04*m
+    # centre shift to make backlash
+    dC = bklsh/(2*math.tan(math.pi*pa/180))
+    # np 為小齒輪齒數
+    np = 20
+    # gear ratio
+    gr = n/np              
+    gearConfig = {'cx':-pr, 'cy':0, 'degs':[0, 360]}
+    # gr*0.666 rpm
+    #pinionConfig = {'cx':pr+dC, 'cy':0, 'degs':[0, -gr*360]}
+    # 0.666 rpm
+    # 目前並非以 tweener 執行動畫
+    #twnr = tweener(0, 90000, "loop")
+    return gear
+
+# 設定兩齒齒數
+n = 10
+n2 = 10
+reduced_ratio = 0.5
+# 使用 80% 的畫布寬度
+m = 0.5*canvas.width/((n+n2)*reduced_ratio)
+# 設定共同的壓力角
+pa = 25
+# n 齒輪的節圓半徑
+pr = n*m/2
+# n2 齒輪的節圓半徑
+pr2 = n2*m/2
+# 建立 gear
+gear = cangoGear(n, m, pa)
+cx = canvas.width/2
+cy = canvas.height/2
+#gear.translate(cx, cy)
+# render 繪出靜態正齒輪輪廓
+#cgo.render(gear)
+# 利用 gear 資料複製一份, 命名為 gear1
+#gear1 = gear.dup()
+# 建立 gear1
+gear1 = cangoGear(n2, m, pa)
+
+
+from time import time
+from browser.timer import request_animation_frame as raf
+from browser.timer import set_interval
+
+deg = math.pi/180
+
+def draw():
+    cgo.clearCanvas()
+    gear.rotate(2*deg)
+    # 在特定位置, 以特定 scale, 特定 degs 執行 render
+    # 設定囓合點在畫布正中央
+    # 囓合點往左偏 pr/2 即為 n 齒輪的圓心 x 座標
+    #cgo.render(gear, {'x':cx-pr*reduced_ratio, 'y':cy, 'scl':reduced_ratio, 'degs':0})
+    cgo.render(gear, {'x':cx-(pr+pr2)*reduced_ratio, 'y':cy, 'scl':0.5, 'degs':0})
+    # 根據兩齒輪齒數比決定 n2 齒輪轉速
+    gear1.rotate(-2*deg*n/n2)
+    # 囓合點往右偏 pr2/2 即為 n2 齒輪的圓心 x 座標, 且 n2 齒轉 180 加一齒角度後囓合
+    cgo.render(gear1, {'x':cx, 'y':cy, 'scl':reduced_ratio, 'degs':180+(360/n2/2)})
+
+set_interval(draw, 2)
+&lt;/script</content><category term="50t 與 25t 的齒輪嚙合靜態輪廓圖"></category></entry><entry><title>動態繪圖</title><link href="./dong-tai-hui-tu.html" rel="alternate"></link><published>2018-05-29T18:00:00+08:00</published><updated>2018-05-29T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2018-05-29:./dong-tai-hui-tu.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;動態繪圖&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;動態繪圖&lt;/font&gt;&lt;/p&gt;
+
+
+&lt;!-- 導入 Brython 標準程式庫 --&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython.js"&gt;&lt;/script&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython_stdlib.js"&gt;&lt;/script&gt;
+
+&lt;!-- 啟動 Brython --&gt;
+
+&lt;script&gt;
+window.onload=function(){
+// 設定 data/py 為共用程式路徑
+brython({debug:1, pythonpath:['./../data/py']});
+}
+&lt;/script&gt;
+
+&lt;canvas id="onegear2" width="800" height="600"&gt;&lt;/canvas&gt;
+
+&lt;div id="onegear2_div" width="800" height="20"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;input id="n1" value="13"&gt;&lt;/input&gt;&lt;br /&gt;
+&lt;input id="n2" value="11"&gt;&lt;/input&gt;&lt;br /&gt;
+&lt;input id="n3" value="17"&gt;&lt;/input&gt;&lt;br /&gt;
+&lt;button id="button"&gt;Set Number of Gears&lt;/button&gt;&lt;/p&gt;
+
+&lt;script type="text/python3"&gt;
+from browser import document as doc
+from browser import html
+import math
+# deg 為角度轉為徑度的轉換因子
+deg = math.pi/180.
+# 定義 Spur 類別
+class Spur(object):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def create_line(self, x1, y1, x2, y2, width=3, fill="red"):
+        self.ctx.beginPath()
+        self.ctx.lineWidth = width
+        self.ctx.moveTo(x1, y1)
+        self.ctx.lineTo(x2, y2)
+        self.ctx.strokeStyle = fill
+        self.ctx.stroke()
+    #
+    # 定義一個繪正齒輪的繪圖函式
+    # midx 為齒輪圓心 x 座標
+    # midy 為齒輪圓心 y 座標
+    # rp 為節圓半徑, n 為齒數
+    # pa 為壓力角 (deg)
+    # 已經針對 n 大於等於 52 齒時的繪圖錯誤修正, 因為 base circle 與齒根圓大小必須進行判斷
+    def Gear(self, midx, midy, rp, n=20, pa=20, color="black"):
+        # 齒輪漸開線分成 15 線段繪製
+        imax = 15
+        # 在輸入的畫布上繪製直線, 由圓心到節圓 y 軸頂點畫一直線
+        self.create_line(midx, midy, midx, midy-rp)
+        # 畫出 rp 圓, 畫圓函式尚未定義
+        #create_oval(midx-rp, midy-rp, midx+rp, midy+rp, width=2)
+        # a 為模數 (代表公制中齒的大小), 模數為節圓直徑(稱為節徑)除以齒數
+        # 模數也就是齒冠大小
+        a=2*rp/n
+        # d 為齒根大小, 為模數的 1.157 或 1.25倍, 這裡採 1.25 倍
+        d=2.5*rp/n
+        # ra 為齒輪的外圍半徑
+        ra=rp+a
+        # 畫出 ra 圓, 畫圓函式尚未定義
+        #create_oval(midx-ra, midy-ra, midx+ra, midy+ra, width=1)
+        # rb 則為齒輪的基圓半徑
+        # 基圓為漸開線長齒之基準圓
+        rb=rp*math.cos(pa*deg)
+        # 畫出 rb 圓 (基圓), 畫圓函式尚未定義
+        #create_oval(midx-rb, midy-rb, midx+rb, midy+rb, width=1)
+        # rd 為齒根圓半徑
+        rd=rp-d
+        # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+        # 畫出 rd 圓 (齒根圓), 畫圓函式尚未定義
+        #create_oval(midx-rd, midy-rd, midx+rd, midy+rd, width=1)
+        # dr 則為基圓到齒頂圓半徑分成 imax 段後的每段半徑增量大小
+        # 將圓弧分成 imax 段來繪製漸開線
+        # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+        if rd&gt;rb:
+            dr = (ra-rd)/imax
+        else:
+            dr=(ra-rb)/imax
+        # tan(pa*deg)-pa*deg 為漸開線函數
+        sigma=math.pi/(2*n)+math.tan(pa*deg)-pa*deg
+        for j in range(n):
+            ang=-2.*j*math.pi/n+sigma
+            ang2=2.*j*math.pi/n+sigma
+            lxd=midx+rd*math.sin(ang2-2.*math.pi/n)
+            lyd=midy-rd*math.cos(ang2-2.*math.pi/n)
+            for i in range(imax+1):
+                # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+                if rd&gt;rb:
+                    r=rd+i*dr
+                else:
+                    r=rb+i*dr
+                theta=math.sqrt((r*r)/(rb*rb)-1.)
+                alpha=theta-math.atan(theta)
+                xpt=r*math.sin(alpha-ang)
+                ypt=r*math.cos(alpha-ang)
+                xd=rd*math.sin(-ang)
+                yd=rd*math.cos(-ang)
+                # i=0 時, 繪線起點由齒根圓上的點, 作為起點
+                if(i==0):
+                    last_x = midx+xd
+                    last_y = midy-yd
+                # 由左側齒根圓作為起點, 除第一點 (xd,yd) 齒根圓上的起點外, 其餘的 (xpt,ypt)則為漸開線上的分段點
+                self.create_line((midx+xpt),(midy-ypt),(last_x),(last_y),fill=color)
+                # 最後一點, 則為齒頂圓
+                if(i==imax):
+                    lfx=midx+xpt
+                    lfy=midy-ypt
+                last_x = midx+xpt
+                last_y = midy-ypt
+            # the line from last end of dedendum point to the recent
+            # end of dedendum point
+            # lxd 為齒根圓上的左側 x 座標, lyd 則為 y 座標
+            # 下列為齒根圓上用來近似圓弧的直線
+            self.create_line((lxd),(lyd),(midx+xd),(midy-yd),fill=color)
+            for i in range(imax+1):
+                # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+                if rd&gt;rb:
+                    r=rd+i*dr
+                else:
+                    r=rb+i*dr
+                theta=math.sqrt((r*r)/(rb*rb)-1.)
+                alpha=theta-math.atan(theta)
+                xpt=r*math.sin(ang2-alpha)
+                ypt=r*math.cos(ang2-alpha)
+                xd=rd*math.sin(ang2)
+                yd=rd*math.cos(ang2)
+                # i=0 時, 繪線起點由齒根圓上的點, 作為起點
+                if(i==0):
+                    last_x = midx+xd
+                    last_y = midy-yd
+                # 由右側齒根圓作為起點, 除第一點 (xd,yd) 齒根圓上的起點外, 其餘的 (xpt,ypt)則為漸開線上的分段點
+                self.create_line((midx+xpt),(midy-ypt),(last_x),(last_y),fill=color)
+                # 最後一點, 則為齒頂圓
+                if(i==imax):
+                    rfx=midx+xpt
+                    rfy=midy-ypt
+                last_x = midx+xpt
+                last_y = midy-ypt
+            # lfx 為齒頂圓上的左側 x 座標, lfy 則為 y 座標
+            # 下列為齒頂圓上用來近似圓弧的直線
+            self.create_line(lfx,lfy,rfx,rfy,fill=color)
+
+canvas = doc['onegear2']
+ctx = canvas.getContext("2d")
+
+# 以 button 驅動的事件函式
+def setgearnumber(e):
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    x = (canvas.width)/2
+    y = (canvas.height)/2
+    if doc["n1"].value.isdigit():
+        n17 = int(doc["n1"].value)
+    else:
+        n17 = 17
+
+    if doc["n2"].value.isdigit():
+        n11 = int(doc["n2"].value)
+    else:
+        n11 = 11
+
+    if doc["n3"].value.isdigit():
+        n13 = int(doc["n3"].value)
+    else:
+        n13 = 13
+
+    # 只使用畫布高度的 80%
+    canvas_size = canvas.height*0.4
+    r17 = canvas_size*n17/(n17+n11+n13)
+    r11 = canvas_size*n11/(n17+n11+n13)
+    r13 = canvas_size*n13/(n17+n11+n13)
+    # 計算各齒輪中心座標
+    x17 = x - r17-r11
+    y17 = y
+
+    x11 = x 
+    y11 = y
+
+    x13 = x + r11+r13
+    y13 = y
+
+    pa = 20
+    # 開始繪製齒輪
+    # 儲存原有的座標系統
+    ctx.save()
+    # 平移到齒輪圓心
+    ctx.translate(x17, y17)
+    # 以齒輪圓心旋轉 90 度, 讓紅色標線在齒輪右側保持水平
+    ctx.rotate(90*deg)
+    # 平移回原來的座標原點
+    ctx.translate(-x17, -y17)
+    gear17 = Spur(ctx).Gear(x17, y17, r17, n17, pa, "blue")
+    # 回復原有的座標系統
+    ctx.restore()
+
+    ctx.save()
+    ctx.translate(x11, y11)
+    # 中間齒輪轉動 -90 度加上一齒, 可以與左側齒輪囓合
+    ctx.rotate(-90*deg-math.pi/n11)
+    ctx.translate(-x11, -y11)
+    gear11 = Spur(ctx).Gear(x11, y11, r11, n11, pa, "blue")
+    ctx.restore()
+
+    ctx.save()
+    ctx.translate(x13, y13)
+    # 右側齒輪轉動 -90 度加上一齒, 可以與原來標線在左側水平的中間齒輪囓合, 但是目前中間齒輪的標線已經轉了 180 度加或減一次
+    # 必須配合兩齒的速比轉換旋轉角, 以便讓中間齒輪與右側齒輪囓合
+    ctx.rotate(-90*deg-math.pi/n13+(180*deg+math.pi/n11)*n11/n13)
+    ctx.translate(-x13, -y13)
+    gear13 = Spur(ctx).Gear(x13, y13, r13, n13, pa, "blue")
+    ctx.restore()
+
+setgearnumber(True)
+
+'''
+div = doc["onegear2_div"]
+form = html.FORM()
+input1 = html.INPUT(type="text", id="n1", name="n1", value="13")
+input2 = html.INPUT(type="text", id="n2", name="n2", value="11")
+input3 = html.INPUT(type="text", id="n3", name="n3", value="19")
+div &lt;= input1 + html.BR() + input2 + html.BR() + input3
+'''
+doc['button'].bind('click',setgearnumber)
+&lt;/script&gt;</content><category term="動態繪圖"></category></entry><entry><title>漸開線正齒輪輪廓</title><link href="./jian-kai-xian-zheng-chi-lun-lun-kuo.html" rel="alternate"></link><published>2018-05-29T18:00:00+08:00</published><updated>2018-05-29T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2018-05-29:./jian-kai-xian-zheng-chi-lun-lun-kuo.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;漸開線正齒輪輪廓&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;漸開線正齒輪輪廓&lt;/font&gt;&lt;/p&gt;
+
+
+&lt;!-- 導入 Brython 標準程式庫 --&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython.js"&gt;&lt;/script&gt;
+
+&lt;script src="../data/Brython-3.5.1/brython_stdlib.js"&gt;&lt;/script&gt;
+
+&lt;!-- 啟動 Brython --&gt;
+
+&lt;script&gt;
+window.onload=function(){
+// 設定 data/py 為共用程式路徑
+brython({debug:1, pythonpath:['./../data/py']});
+}
+&lt;/script&gt;
+
+&lt;p&gt;正齒輪嚙合的協同繪圖 (13t-17t-11t)&lt;/p&gt;
+&lt;canvas id='gear3' width='800' height='400'&gt;&lt;/canvas&gt;
+
+&lt;script type="text/python3"&gt;
+# 導入 browser 模組中的 document, 並設為 doc 變數
+from browser import document as doc
+import math
+# deg 為角度轉為徑度的轉換因子
+deg = math.pi/180.
+# 定義 Spur 類別
+class Spur(object):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def create_line(self, x1, y1, x2, y2, width=3, fill="red"):
+        self.ctx.beginPath()
+        self.ctx.lineWidth = width
+        self.ctx.moveTo(x1, y1)
+        self.ctx.lineTo(x2, y2)
+        self.ctx.strokeStyle = fill
+        self.ctx.stroke()
+    #
+    # 定義一個繪正齒輪的繪圖函式
+    # midx 為齒輪圓心 x 座標
+    # midy 為齒輪圓心 y 座標
+    # rp 為節圓半徑, n 為齒數
+    # pa 為壓力角 (deg)
+    # rot 為旋轉角 (deg)
+    # 已經針對 n 大於等於 52 齒時的繪圖錯誤修正, 因為 base circle 與齒根圓大小必須進行判斷
+    def Gear(self, midx, midy, rp, n=20, pa=20, color="black"):
+        # 齒輪漸開線分成 15 線段繪製
+        imax = 15
+        # 在輸入的畫布上繪製直線, 由圓心到節圓 y 軸頂點畫一直線
+        self.create_line(midx, midy, midx, midy-rp)
+        # 畫出 rp 圓, 畫圓函式尚未定義
+        #create_oval(midx-rp, midy-rp, midx+rp, midy+rp, width=2)
+        # a 為模數 (代表公制中齒的大小), 模數為節圓直徑(稱為節徑)除以齒數
+        # 模數也就是齒冠大小
+        a=2*rp/n
+        # d 為齒根大小, 為模數的 1.157 或 1.25倍, 這裡採 1.25 倍
+        d=2.5*rp/n
+        # ra 為齒輪的外圍半徑
+        ra=rp+a
+        # 畫出 ra 圓, 畫圓函式尚未定義
+        #create_oval(midx-ra, midy-ra, midx+ra, midy+ra, width=1)
+        # rb 則為齒輪的基圓半徑
+        # 基圓為漸開線長齒之基準圓
+        rb=rp*math.cos(pa*deg)
+        # 畫出 rb 圓 (基圓), 畫圓函式尚未定義
+        #create_oval(midx-rb, midy-rb, midx+rb, midy+rb, width=1)
+        # rd 為齒根圓半徑
+        rd=rp-d
+        # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+        # 畫出 rd 圓 (齒根圓), 畫圓函式尚未定義
+        #create_oval(midx-rd, midy-rd, midx+rd, midy+rd, width=1)
+        # dr 則為基圓到齒頂圓半徑分成 imax 段後的每段半徑增量大小
+        # 將圓弧分成 imax 段來繪製漸開線
+        # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+        if rd&gt;rb:
+            dr = (ra-rd)/imax
+        else:
+            dr=(ra-rb)/imax
+        # tan(pa*deg)-pa*deg 為漸開線函數
+        sigma=math.pi/(2*n)+math.tan(pa*deg)-pa*deg
+        for j in range(n):
+            ang=-2.*j*math.pi/n+sigma
+            ang2=2.*j*math.pi/n+sigma
+            lxd=midx+rd*math.sin(ang2-2.*math.pi/n)
+            lyd=midy-rd*math.cos(ang2-2.*math.pi/n)
+            for i in range(imax+1):
+                # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+                if rd&gt;rb:
+                    r=rd+i*dr
+                else:
+                    r=rb+i*dr
+                theta=math.sqrt((r*r)/(rb*rb)-1.)
+                alpha=theta-math.atan(theta)
+                xpt=r*math.sin(alpha-ang)
+                ypt=r*math.cos(alpha-ang)
+                xd=rd*math.sin(-ang)
+
+                yd=rd*math.cos(-ang)
+                # i=0 時, 繪線起點由齒根圓上的點, 作為起點
+                if(i==0):
+                    last_x = midx+xd
+                    last_y = midy-yd
+                # 由左側齒根圓作為起點, 除第一點 (xd,yd) 齒根圓上的起點外, 其餘的 (xpt,ypt)則為漸開線上的分段點
+                self.create_line((midx+xpt),(midy-ypt),(last_x),(last_y),fill=color)
+                # 最後一點, 則為齒頂圓
+                if(i==imax):
+                    lfx=midx+xpt
+                    lfy=midy-ypt
+                last_x = midx+xpt
+                last_y = midy-ypt
+            # the line from last end of dedendum point to the recent
+            # end of dedendum point
+            # lxd 為齒根圓上的左側 x 座標, lyd 則為 y 座標
+            # 下列為齒根圓上用來近似圓弧的直線
+            self.create_line((lxd),(lyd),(midx+xd),(midy-yd),fill=color)
+            for i in range(imax+1):
+                # 當 rd 大於 rb 時, 漸開線並非畫至 rb, 而是 rd
+                if rd&gt;rb:
+                    r=rd+i*dr
+                else:
+                    r=rb+i*dr
+                theta=math.sqrt((r*r)/(rb*rb)-1.)
+                alpha=theta-math.atan(theta)
+                xpt=r*math.sin(ang2-alpha)
+                ypt=r*math.cos(ang2-alpha)
+                xd=rd*math.sin(ang2)
+                yd=rd*math.cos(ang2)
+                # i=0 時, 繪線起點由齒根圓上的點, 作為起點
+                if(i==0):
+                    last_x = midx+xd
+                    last_y = midy-yd
+                # 由右側齒根圓作為起點, 除第一點 (xd,yd) 齒根圓上的起點外, 其餘的 (xpt,ypt)則為漸開線上的分段點
+                self.create_line((midx+xpt),(midy-ypt),(last_x),(last_y),fill=color)
+                # 最後一點, 則為齒頂圓
+                if(i==imax):
+                    rfx=midx+xpt
+                    rfy=midy-ypt
+                last_x = midx+xpt
+                last_y = midy-ypt
+            # lfx 為齒頂圓上的左側 x 座標, lfy 則為 y 座標
+            # 下列為齒頂圓上用來近似圓弧的直線
+            self.create_line(lfx,lfy,rfx,rfy,fill=color)
+
+# 準備在 id="gear3" 的 canvas 中繪圖
+canvas = doc["gear3"]
+ctx = canvas.getContext("2d")
+
+# 模數決定齒的尺寸大小, 囓合齒輪組必須有相同的模數與壓力角
+# 壓力角 pa 單位為角度
+pa = 20
+# 第1齒輪齒數
+n_g1 = 13
+# 第2齒輪齒數
+n_g2 = 17
+# 第3齒輪齒數
+n_g3 = 11
+# m 為模數, 根據畫布的寬度, 計算適合的模數大小
+m = (0.8*canvas.width)/(n_g1+n_g2+n_g3)
+# 根據模數 m, 計算各齒輪的節圓半徑
+rp_g1 = m*n_g1/2
+rp_g2 = m*n_g2/2
+rp_g3 = m*n_g3/2
+#單一正齒輪繪圖呼叫格式 Spur(ctx).Gear(x, y, r, n, pa, "blue")
+# 開始繪製囓合齒輪輪廓
+# 繪圖第1齒輪的圓心座標, 因為希望繪圖佔去 canvas.width 的 80%, 所以兩邊各預留 10% 距離
+x_g1 = canvas.width*0.1+rp_g1
+# y 方向繪圖區域上方預留 canvas.height 的 20%
+y_g1 = canvas.height*0.2+rp_g1
+# 第2齒輪的圓心座標, 假設排列成水平, 表示各齒輪圓心 y 座標相同
+x_g2 = x_g1 + rp_g1 + rp_g2
+y_g2 = y_g1
+# 第3齒輪的圓心座標
+x_g3 = x_g1 + rp_g1 + 2*rp_g2 + rp_g3
+y_g3 = y_g1
+
+# 將第1齒輪順時鐘轉 90 度, 也就是 math.pi/2
+# 使用 ctx.save() 與 ctx.restore() 以確保各齒輪以相對座標進行旋轉繪圖
+ctx.save()
+# translate to the origin of second gear
+ctx.translate(x_g1, y_g1)
+# rotate to engage
+ctx.rotate(math.pi/2)
+# put it back
+ctx.translate(-x_g1, -y_g1)
+# 繪製第一個齒輪輪廓
+Spur(ctx).Gear(x_g1, y_g1, rp_g1, n_g1, pa, "blue")
+ctx.restore()
+
+# 將第2齒輪逆時鐘轉 90 度之後, 再多轉一齒, 以便與第1齒輪進行囓合
+ctx.save()
+# translate to the origin of second gear
+ctx.translate(x_g2, y_g2)
+# rotate to engage
+ctx.rotate(-math.pi/2-math.pi/n_g2)
+# put it back
+ctx.translate(-x_g2, -y_g2)
+Spur(ctx).Gear(x_g2, y_g2, rp_g2, n_g2, pa, "black")
+ctx.restore()
+
+# 將第3齒輪逆時鐘轉 90 度之後, 再往回轉第2齒輪定位帶動轉角, 然後再逆時鐘多轉一齒, 以便與第2齒輪進行囓合
+ctx.save()
+# translate to the origin of second gear
+ctx.translate(x_g3, y_g3)
+# rotate to engage
+# math.pi+math.pi/n_g2 為第2齒輪從順時鐘轉 90 度之後, 必須配合目前的標記線所作的齒輪 2 轉動角度, 要轉換到齒輪3 的轉動角度
+# 必須乘上兩齒輪齒數的比例, 若齒輪2 大, 則齒輪3 會轉動較快
+# 第1個 -math.pi/2 為將原先垂直的第3齒輪定位線逆時鐘旋轉 90 度
+# -math.pi/n_g3 則是第3齒與第2齒定位線重合後, 必須再逆時鐘多轉一齒的轉角, 以便進行囓合
+# (math.pi+math.pi/n_g2)*n_g2/n_g3 則是第2齒原定位線為順時鐘轉動 90 度, 
+# 但是第2齒輪為了與第1齒輪囓合, 已經距離定位線, 多轉了 180 度, 再加上第2齒輪的一齒角度, 因為要帶動第3齒輪定位, 
+# 這個修正角度必須要再配合第2齒與第3齒的轉速比加以轉換成第3齒輪的轉角, 因此乘上 n_g2/n_g3
+ctx.rotate(-math.pi/2-math.pi/n_g3+(math.pi+math.pi/n_g2)*n_g2/n_g3)
+# put it back
+ctx.translate(-x_g3, -y_g3)
+Spur(ctx).Gear(x_g3, y_g3, rp_g3, n_g3, pa, "red")
+ctx.restore()
+&lt;/script&gt;</content><category term="漸開線正齒輪輪廓"></category></entry><entry><title>網路線製作</title><link href="./wang-lu-xian-zhi-zuo.html" rel="alternate"></link><published>2017-04-27T18:00:00+08:00</published><updated>2017-04-27T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2017-04-27:./wang-lu-xian-zhi-zuo.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;自行製作網路線&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;自行製作網路線&lt;/font&gt;&lt;/p&gt;
 
 
 &lt;p&gt;工具:&lt;br&gt;
@@ -8,11 +627,13 @@
 雙絞線&lt;img src="data:image/jpeg;base64,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"&gt;&lt;br&gt;&lt;/p&gt;
 &lt;p&gt;製作步驟:&lt;br&gt;1.將網路線撥開&lt;br&gt;2.將網路線按照白橙、橙、白綠、藍、白藍、綠、白棕、棕顏色排好(長度大約1.5公分)&lt;br&gt;3.插入接頭當中&lt;br&gt;4.使用壓線鉗就完成了.&lt;br&gt;568A： 綠白，綠，橙白，藍，藍白，橙，棕白，棕 &lt;br&gt;568B： 橙白，橙，綠白，藍，藍白，綠，棕白，棕&lt;/p&gt;
 &lt;p&gt;而網路線規格分為7級,分別為CAR1-6和5e以下為各階級差異&lt;BR&gt;&lt;img src="http://www.synnex.com.tw/asp/images/Info178723.jpg"&gt;&lt;/p&gt;
-&lt;p&gt;實際有傳輸訊號和接收訊號的只有4支腳位,分別為1、2、3、6,4、5、7、8是沒有定義的.&lt;/p&gt;</summary><category term="網路線"></category></entry><entry><title>何謂機械設計</title><link href="./he-wei-ji-jie-she-ji.html" rel="alternate"></link><published>2017-04-26T18:00:00+08:00</published><updated>2017-04-26T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:,2017-04-26:./he-wei-ji-jie-she-ji.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;機械設計.&lt;/font&gt;&lt;/p&gt;
+&lt;p&gt;實際有傳輸訊號和接收訊號的只有4支腳位,分別為1、2、3、6,4、5、7、8是沒有定義的.&lt;/p&gt;</content><category term="網路線"></category></entry><entry><title>何謂機械設計</title><link href="./he-wei-ji-jie-she-ji.html" rel="alternate"></link><published>2017-04-26T18:00:00+08:00</published><updated>2017-04-26T18:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2017-04-26:./he-wei-ji-jie-she-ji.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;機械設計.&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;機械設計.&lt;/font&gt;&lt;/p&gt;
 
 
 &lt;p&gt;1.&lt;font color="blue"&gt;機&lt;/font&gt;:精巧配置之互動元件.&lt;BR&gt;2.&lt;font color="blue"&gt;械&lt;/font&gt;:配置之元件所產生的特定功能,解決問題.&lt;BR&gt;3.&lt;font color="blue"&gt;設&lt;/font&gt;:表達結果.&lt;BR&gt;4.&lt;font color="blue"&gt;計&lt;/font&gt;許多的思考和討論.&lt;/p&gt;
-&lt;p&gt;我們來到機械設計系,就是希望未來能成為一位虛實整合的機械工程師,除了能夠做出實際的機械結構,更能夠將軟體和程式運用自如,才能在這數位化的時代能夠謀得一份良好的工作.&lt;/p&gt;</summary><category term="機械設計"></category></entry><entry><title>2017 網際內容管理</title><link href="./2017-wang-ji-nei-rong-guan-li.html" rel="alternate"></link><published>2017-04-21T12:00:00+08:00</published><updated>2017-04-21T12:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:,2017-04-21:./2017-wang-ji-nei-rong-guan-li.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;使用VirtualBox之相關設定介紹.&lt;/font&gt;&lt;/p&gt;
+&lt;p&gt;我們來到機械設計系,就是希望未來能成為一位虛實整合的機械工程師,除了能夠做出實際的機械結構,更能夠將軟體和程式運用自如,才能在這數位化的時代能夠謀得一份良好的工作.&lt;/p&gt;</content><category term="機械設計"></category></entry><entry><title>2017 網際內容管理</title><link href="./2017-wang-ji-nei-rong-guan-li.html" rel="alternate"></link><published>2017-04-21T12:00:00+08:00</published><updated>2017-04-21T12:00:00+08:00</updated><author><name>楊永慶</name></author><id>tag:None,2017-04-21:./2017-wang-ji-nei-rong-guan-li.html</id><summary type="html">&lt;p&gt;&lt;font size="3"&gt;使用VirtualBox之相關設定介紹.&lt;/font&gt;&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;&lt;font size="3"&gt;使用VirtualBox之相關設定介紹.&lt;/font&gt;&lt;/p&gt;
 
 
 &lt;p&gt;VirtualBox是一個虛擬電腦軟體,其他還有Vmware也有類似的功能.&lt;br&gt;使用此類型之軟體,主要目的是測試一些軟體與病毒,且讓其不會影響到原本的電腦系統.
@@ -47,4 +668,4 @@
 &lt;p&gt;內部網路:可以讓不同Guest OS 互通,如同連接到同一個Hub,無法存取外部網路安全速度比Bridged Networking 有效,直接傳送,不需要透過Host OS的網路堆疊IP 需要手動指定.&lt;/p&gt;
 &lt;p&gt;「僅限主機」介面卡:不同Guest OS 可以互通，可以跟Host OS 互通混合Bridged 與Internal Networking,在Host OS 建立一個軟體網路卡,如同虛擬機器連線到虛擬網路,只可以讓Host OS 與Guest OS 互通Host-Only Networking 需使用DHCP,不可以指定IP.在VirtualBox 檔案/喜好設定/網路/VirtualBox Host-Only Ethernet Adapter中可以設定DHCP Server。使Host OS 與Guest OS 擁有相同網段之IPAddress以互通該DHCP Server 為獨立模式,只有在此模式才可以關閉,並指定IP 範圍.&lt;/p&gt;
 &lt;p&gt;通用驅動程式:用於選擇網卡驅動.該驅動,是virtualbox內部自帶的,或者是通過extension pack添加進來的.&lt;/p&gt;
-&lt;p&gt;參考資料:https://sofree.cc/virtualbox-os/&lt;br&gt;http://ithelp.ithome.com.tw/articles/10107536&lt;br&gt;http://ithelp.ithome.com.tw/articles/10108486&lt;br&gt;http://icodding.blogspot.tw/2015/07/virtualbox.html&lt;br&gt;http://wiki.mbalib.com/zh-tw/%E8%99%9A%E6%8B%9F%E7%A1%AC%E7%9B%98&lt;br&gt;http://linux.vbird.org/linux_server/0250simple_firewall/0320nat.php&lt;br&gt;http://www.gamez.com.tw/thread-449368-1-1.html&lt;br&gt;https://zh.wikipedia.org/wiki/%E5%8A%A8%E6%80%81%E4%B8%BB%E6%9C%BA%E8%AE%BE%E7%BD%AE%E5%8D%8F%E8%AE%AE&lt;br&gt;https://zh.wikipedia.org/wiki/%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2&lt;br&gt;https://www.twbsd.org/cht/book/ch12.htm&lt;br&gt;&lt;/p&gt;</summary><category term="Virtualbox 網路相關設定"></category></entry></feed>
+&lt;p&gt;參考資料:https://sofree.cc/virtualbox-os/&lt;br&gt;http://ithelp.ithome.com.tw/articles/10107536&lt;br&gt;http://ithelp.ithome.com.tw/articles/10108486&lt;br&gt;http://icodding.blogspot.tw/2015/07/virtualbox.html&lt;br&gt;http://wiki.mbalib.com/zh-tw/%E8%99%9A%E6%8B%9F%E7%A1%AC%E7%9B%98&lt;br&gt;http://linux.vbird.org/linux_server/0250simple_firewall/0320nat.php&lt;br&gt;http://www.gamez.com.tw/thread-449368-1-1.html&lt;br&gt;https://zh.wikipedia.org/wiki/%E5%8A%A8%E6%80%81%E4%B8%BB%E6%9C%BA%E8%AE%BE%E7%BD%AE%E5%8D%8F%E8%AE%AE&lt;br&gt;https://zh.wikipedia.org/wiki/%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2&lt;br&gt;https://www.twbsd.org/cht/book/ch12.htm&lt;br&gt;&lt;/p&gt;</content><category term="Virtualbox 網路相關設定"></category></entry></feed>
